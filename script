@@ -1,29 +1,30 @@
-async function loadComplaints() {
-  try {
-    const res = await fetch(
-      "https://script.google.com/macros/s/AKfycbxtYLyDnhYZS8zeee2xRoYVndVhAYM0x_uJwaUq2RRd4fhuMFvGBNaIZu6wz-CFA2O6/exec"
-    );
-    const data = await res.json();
+document.addEventListener('DOMContentLoaded', () => {
+    const reportList = document.getElementById('reportList');
 
-    const tableBody = document.querySelector("#complaintsTable tbody");
-    tableBody.innerHTML = "";
+    // Load reports from localStorage
+    let reports = JSON.parse(localStorage.getItem('reports') || '[]');
 
-    // Skip first row (headers from Google Sheet)
-    data.slice(1).forEach((row) => {
-      const [name, email, complaint, timestamp] = row;
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${name}</td>
-        <td>${email}</td>
-        <td>${complaint}</td>
-        <td>${timestamp}</td>
-      `;
-      tableBody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error("Error fetching complaints:", err);
-  }
-}
+    function renderReports() {
+        if (!reportList) return;
+        reportList.innerHTML = reports.map((r, i) => 
+            `<li>
+                <strong>${r.name}</strong>: ${r.report} <em>(${r.date})</em>
+                <button class="delete" data-index="${i}">Delete</button>
+            </li>`
+        ).join('');
+    }
 
-loadComplaints();
-setInterval(loadComplaints, 10000); // auto-refresh every 10s
+    renderReports();
+
+    // Delete report
+    if (reportList) {
+        reportList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete')) {
+                const index = e.target.dataset.index;
+                reports.splice(index, 1);
+                localStorage.setItem('reports', JSON.stringify(reports));
+                renderReports();
+            }
+        });
+    }
+});
